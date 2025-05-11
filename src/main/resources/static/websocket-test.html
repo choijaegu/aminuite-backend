@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket Chat Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script type="text/javascript">
+        var stompClient = null;
+        // 간단하게 임시 사용자 이름을 만듭니다.
+        var username = "User" + Math.floor(Math.random() * 1000);
+
+        function connect() {
+            // WebSocketConfig에서 설정한 /ws 엔드포인트로 SockJS 연결을 시도합니다.
+            var socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            stompClient.connect({}, function (frame) {
+                console.log('Connected: ' + frame);
+                document.getElementById('status').innerText = '서버 연결 성공! 사용자명: ' + username;
+                document.getElementById('connectButton').disabled = true;
+                document.getElementById('disconnectButton').disabled = false;
+                document.getElementById('sendButton').disabled = false;
+
+                // '/topic/public' 주제를 구독합니다. 이 주제로 오는 메시지를 받게 됩니다.
+                stompClient.subscribe('/topic/public', function (chatMessageOutput) {
+                    showMessage(JSON.parse(chatMessageOutput.body));
+                });
+            }, function(error) {
+                console.error('STOMP 연결 오류: ' + error);
+                document.getElementById('status').innerText = '서버 연결 실패. 브라우저 콘솔(F12)을 확인하세요.';
+            });
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+            }
+            console.log("Disconnected");
+            document.getElementById('status').innerText = '연결 끊김.';
+            document.getElementById('connectButton').disabled = false;
+            document.getElementById('disconnectButton').disabled = true;
+            document.getElementById('sendButton').disabled = true;
+        }
+
+        function sendMessage() {
+            var messageContent = document.getElementById('message').value.trim();
+            if(messageContent && stompClient && stompClient.connected) {
+                var chatMessage = {
+                    sender: username,
+                    content: messageContent,
+                    type: 'CHAT' // ChatMessage.java 에 정의된 MessageType
+                };
+                // '/app/chat.sendMessage' 경로로 메시지를 서버에 전송합니다.
+                stompClient.send("/app/chat.sendMessage", {}, JSON.stringify(chatMessage));
+                document.getElementById('message').value = ''; // 입력창 비우기
+            } else {
+                alert("메시지를 입력하거나 먼저 서버에 연결하세요.");
+            }
+        }
+
+        function showMessage(message) {
+            var messagesDiv = document.getElementById('messages');
+            var p = document.createElement('p');
+            p.style.wordWrap = 'break-word';
+            p.appendChild(document.createTextNode(message.sender + ": " + message.content + " (타입: " + message.type + ")"));
+            messagesDiv.appendChild(p);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // 항상 맨 아래로 스크롤
+        }
+
+        function handleKeyPress(event) {
+        // 엔터 키가 눌렸는지 확인 (event.key 또는 event.keyCode 사용)
+        if (event.key === 'Enter' || event.keyCode === 13) {
+            event.preventDefault(); // 엔터 키의 기본 동작(예: 줄바꿈)을 막습니다.
+            sendMessage();      // sendMessage 함수를 호출합니다.
+        }
+    }
+
+        // 페이지 로드 시 자동으로 connect 함수를 호출하지 않고, 버튼을 통해 연결하도록 변경
+        // window.onload = function() { connect(); };
+        window.onbeforeunload = function() { disconnect(); }; // 페이지를 닫거나 새로고침할 때 연결 해제
+    </script>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        #messages { height: 300px; width: 500px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-top: 10px; margin-bottom: 10px; background-color: #f9f9f9; }
+        #messages p { margin: 5px 0; padding: 5px; background-color: #e7e7e7; border-radius: 4px; }
+        #controls button { margin-right: 5px; }
+    </style>
+</head>
+<body>
+<div>
+    <h2 id="status">연결 안됨.</h2>
+    <div id="controls">
+        <button id="connectButton" onclick="connect()">연결하기</button>
+        <button id="disconnectButton" onclick="disconnect()" disabled>연결 끊기</button>
+    </div>
+</div>
+<hr/>
+<div id="chat-input" style="margin-top: 10px;">
+    <input type="text" id="message" placeholder="메시지를 입력하세요..." style="width: 350px; padding: 5px;" onkeypress="handleKeyPress(event)"/>
+    <button id="sendButton" onclick="sendMessage()" disabled>전송</button>
+</div>
+<h3>받은 메시지:</h3>
+<div id="messages">
+</div>
+</body>
+</html>

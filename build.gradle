@@ -22,6 +22,7 @@ dependencies {
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa' // JPA (데이터베이스 작업용)
 	runtimeOnly 'org.postgresql:postgresql' // PostgreSQL 드라이버
+	implementation 'org.springframework.boot:spring-boot-starter-websocket' // WebSocket 및 STOMP 지원
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }

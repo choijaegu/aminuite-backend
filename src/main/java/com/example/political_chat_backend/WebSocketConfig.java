@@ -22,12 +22,11 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         config.setApplicationDestinationPrefixes("/app");
     }
 
+    // WebSocketConfig.java
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // STOMP WebSocket 엔드포인트를 등록합니다.
-        // 클라이언트가 WebSocket 연결을 시작할 때 사용할 경로입니다.
-        // 예를 들어, JavaScript 클라이언트는 "new SockJS('/ws')" 와 같이 이 경로로 접속합니다.
-        // withSockJS()는 WebSocket을 지원하지 않는 브라우저에서도 유사한 경험을 제공하기 위한 옵션입니다.
-        registry.addEndpoint("/ws").withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*") //  <-- 이 부분을 추가하거나, "http://localhost:8081"로 설정
+                .withSockJS();
     }
 }

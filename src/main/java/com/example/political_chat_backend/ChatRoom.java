@@ -3,10 +3,10 @@ package com.example.political_chat_backend;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne; // ManyToOne 추가
-import jakarta.persistence.JoinColumn; // JoinColumn 추가
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
 import java.time.LocalDateTime;
-import com.fasterxml.jackson.annotation.JsonBackReference; // 순환 참조 방지용
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 public class ChatRoom {
@@ -20,28 +20,34 @@ public class ChatRoom {
 
     private LocalDateTime createdAt;
 
-    // CommunityCategory와의 관계 설정 (여러 채팅방은 하나의 카테고리에 속할 수 있음)
-    @ManyToOne // N:1 관계
-    @JoinColumn(name = "category_id", nullable = false) // 외래키 컬럼 이름 및 not null 설정
-    @JsonBackReference // 순환 참조 방지: ChatRoom -> Category 방향은 직렬화에서 제외될 수 있음
+    @ManyToOne
+    @JoinColumn(name = "category_id", nullable = false)
+    @JsonBackReference
     private CommunityCategory category;
+
+    @Column(nullable = false) // 방장은 필수 정보라고 가정
+    private String ownerUsername; // 방 생성자 (방장)의 사용자 이름
 
     protected ChatRoom() {}
 
-    // 생성자 수정: CommunityCategory 파라미터 추가
-    public ChatRoom(String roomId, String name, CommunityCategory category) {
+    // 생성자 수정: ownerUsername 파라미터 추가
+    public ChatRoom(String roomId, String name, CommunityCategory category, String ownerUsername) {
         this.roomId = roomId;
         this.name = name;
         this.category = category;
+        this.ownerUsername = ownerUsername; // ownerUsername 설정
         this.createdAt = LocalDateTime.now();
     }
 
-    // Getters (Setters는 필요에 따라)
+    // Getters
     public String getRoomId() { return roomId; }
     public String getName() { return name; }
     public LocalDateTime getCreatedAt() { return createdAt; }
-    public CommunityCategory getCategory() { return category; } // category getter 추가
+    public CommunityCategory getCategory() { return category; }
+    public String getOwnerUsername() { return ownerUsername; } // ownerUsername getter 추가
 
+    // Setters
     public void setName(String name) { this.name = name; }
-    public void setCategory(CommunityCategory category) { this.category = category; } // category setter 추가
+    public void setCategory(CommunityCategory category) { this.category = category; }
+    public void setOwnerUsername(String ownerUsername) { this.ownerUsername = ownerUsername; } // ownerUsername setter 추가
 }

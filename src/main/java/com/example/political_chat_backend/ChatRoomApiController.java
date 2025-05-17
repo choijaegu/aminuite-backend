@@ -54,36 +54,37 @@ public class ChatRoomApiController {
     // 채팅방 생성 시 이제 categoryId도 필요하므로 경로에 포함
     @PostMapping("/categories/{categoryId}/chatrooms")
     public ResponseEntity<?> createChatRoom(@PathVariable String categoryId, @RequestBody Map<String, String> payload) {
-        String roomId = payload.get("roomId");
+        // String roomId = payload.get("roomId"); // 클라이언트로부터 roomId를 받지 않음
         String name = payload.get("name");
+        String ownerUsername = payload.get("ownerUsername");
 
-        if (roomId == null || roomId.trim().isEmpty() || name == null || name.trim().isEmpty()) {
-            return ResponseEntity.badRequest().body("방 ID와 방 이름은 필수입니다.");
+        // roomId 유효성 검사 제거, name과 ownerUsername만 체크
+        if (name == null || name.trim().isEmpty() ||
+                ownerUsername == null || ownerUsername.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("방 이름과 생성자 닉네임은 필수입니다.");
         }
         try {
-            ChatRoom createdChatRoom = chatRoomService.createChatRoom(categoryId, roomId, name);
+            // ChatRoomService 호출 시 roomId를 전달하지 않음
+            ChatRoom createdChatRoom = chatRoomService.createChatRoom(categoryId, name, ownerUsername);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdChatRoom);
-        } catch (IllegalArgumentException e) {
-            // 카테고리가 없거나, 방 ID가 중복되거나 할 때 예외 메시지를 그대로 전달
+        } catch (IllegalArgumentException | IllegalStateException e) { // IllegalStateException 추가
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
     }
 
-    // 모든 채팅방 목록 (이것은 유지하거나, 카테고리별 목록 조회로 대체/보강)
     @GetMapping("/chatrooms")
-    public ResponseEntity<List<ChatRoom>> getAllChatRooms() {
-        List<ChatRoom> chatRooms = chatRoomService.findAllChatRooms();
-        return ResponseEntity.ok(chatRooms);
+    public ResponseEntity<List<ChatRoomDto>> getAllChatRooms() { // 반환 타입 변경
+        List<ChatRoomDto> chatRoomDtos = chatRoomService.findAllChatRooms();
+        return ResponseEntity.ok(chatRoomDtos);
     }
 
-    // 특정 카테고리 내의 채팅방 목록 조회
     @GetMapping("/categories/{categoryId}/chatrooms")
-    public ResponseEntity<?> getChatRoomsByCategory(@PathVariable String categoryId) {
+    public ResponseEntity<?> getChatRoomsByCategory(@PathVariable String categoryId) { // 반환 타입 변경 (List<ChatRoomDto>)
         try {
-            List<ChatRoom> chatRooms = chatRoomService.findChatRoomsByCategoryId(categoryId);
-            return ResponseEntity.ok(chatRooms);
+            List<ChatRoomDto> chatRoomDtos = chatRoomService.findChatRoomsByCategoryId(categoryId);
+            return ResponseEntity.ok(chatRoomDtos);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.notFound().build(); // 해당 카테고리가 없을 경우
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage()); // 더 명확한 오류 응답
         }
     }
 

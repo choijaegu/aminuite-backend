@@ -15,7 +15,9 @@ public class ChatMessage {
         CHAT,
         JOIN,
         LEAVE,
-        USER_LIST_UPDATE // 사용자 목록/인원수 업데이트용 타입 추가
+        USER_LIST_UPDATE, // 사용자 목록/인원수 업데이트용 타입 추가
+        KICK,
+        SYSTEM
     }
 
     // 기본 생성자

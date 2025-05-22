@@ -1,30 +1,28 @@
 services:
   - type: web
-    name: aminuite-api # Render 대시보드에서 사용할 서비스 이름
-    env: java         # Java 환경임을 명시!
-    region: singapore # 데이터베이스와 동일한 지역 선택
-    plan: free        # 무료 플랜
-    branch: main      # GitHub에서 배포할 브랜치
+    name: aminuite-api # Render 대시보드의 서비스 이름과 일치
+    runtime: java     # <--- 'env: java' 대신 또는 함께 'runtime: java' 명시
+    region: singapore # 실제 설정한 지역
+    plan: free
+    branch: main
+    buildFilter: # 이 부분은 빌드 시간을 줄이기 위해 추가하는 것이 좋습니다.
+      paths:
+        - "src/**"
+        - "build.gradle"
+        - "settings.gradle" # Gradle 설정 파일
+        - "gradlew"
+        - "gradlew.bat"
+        - "gradle/**"
+      # - "pom.xml" # Maven 사용 시
     buildCommand: "./gradlew build -x test"
-    startCommand: "java -jar build/libs/political-chat-backend-0.0.1-SNAPSHOT.jar" # 실제 생성되는 JAR 파일명으로 변경!
+    startCommand: "java -jar build/libs/political-chat-backend-0.0.1-SNAPSHOT.jar" # <<--- 실제 JAR 파일명!
     envVars:
-      - key: JAVA_VERSION # 명시적으로 Java 버전 지정
+      - key: JAVA_VERSION
         value: 21
-      # 나머지 환경 변수들 (DB_URL, DB_USERNAME, DB_PASSWORD, JWT_SECRET 등)은
-      # Render 대시보드의 "Environment" 탭에서 이미 설정하셨다면,
-      # 여기서는 생략하거나, sync: false 옵션을 주어 대시보드 설정을 우선시 할 수 있습니다.
-      # 만약 여기서도 정의하고 싶다면 아래와 같이 fromDatabase 등을 사용할 수 있습니다.
+      # 다른 환경 변수들 (DB, JWT_SECRET)은 Render 대시보드에서 설정한 값을 사용하도록
+      # 여기서는 명시하지 않거나, sync: false 옵션과 함께 값을 지정할 수 있습니다.
+      # 예시:
       # - key: DB_URL
-      #   fromDatabase:
-      #     name: aminuite-db # Render에서 생성한 PostgreSQL 데이터베이스 서비스의 '이름'
-      #     property: internalConnectionString
-      # - key: DB_USERNAME
-      #   fromDatabase:
-      #     name: aminuite-db
-      #     property: user
-      # - key: DB_PASSWORD
-      #   fromDatabase:
-      #     name: aminuite-db
-      #     property: password
+      #   sync: false
       # - key: JWT_SECRET
-      #   sync: false # 대시보드에서 설정한 값을 사용
+      #   sync: false
